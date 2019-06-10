@@ -154,9 +154,8 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
         collectionView.reloadData()
         addLoadingView(to: view)
         guard let query = searchBar.text else { return }
-//        searchBar.showsCancelButton = false
         
-        service.searchPhotos(query) { [ unowned self ] (response, error) in
+        service.searchPhotos(query) { [unowned self] (response, error) in
             if let error = error {
                 self.handleError(error)
             }

@@ -106,7 +106,7 @@ class PhotoDetailsViewController: UIViewController {
         let gradientLayerBounds = imageBounds(in: imageView)
         gradientLayer.frame = gradientLayerBounds
         
-        //Add layer only if it exists
+        //Add layer only if it is not exists yet
         if let imageViewLayers = imageView.layer.sublayers {
             if imageViewLayers.contains(gradientLayer) {
                 return
@@ -129,8 +129,9 @@ class PhotoDetailsViewController: UIViewController {
         metaLabel.bottomAnchor.constraint(equalTo: imageView.bottomAnchor, constant: bottomSpaceBetweenImageAndView * -1 - 8).isActive = true
     }
     
+    //updates constraints if device changed orientation
     private func updateMetalabel() {
-        //updating metaLabel bottom ancher
+        //updating metaLabel bottom anchor
         for constraint in imageView.constraints {
             if constraint.firstAttribute == .bottom {
                 let bottomSpaceBetweenImageAndView = (imageView.bounds.height - imageBounds(in: imageView).height) / 2
@@ -150,6 +151,7 @@ class PhotoDetailsViewController: UIViewController {
         let userName = photo.userName
         metaLabel.text = "Автор: \(userName)"
         
+        //called only with saved photos, which have dateAdded
         if let dateAdded = photo.dateAdded {
             let dateFormater = DateFormatter()
             dateFormater.locale = Locale(identifier: "ru_RU")
@@ -159,6 +161,7 @@ class PhotoDetailsViewController: UIViewController {
         }
     }
     
+    //Checks if opened photo already saved to avoid dublication
     private func isPhotoAlreadySaved() -> Bool {
         guard let photoGaleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController else { return false }
         let savedPhotos = photoGaleryVC.savedPhotos
@@ -191,16 +194,17 @@ class PhotoDetailsViewController: UIViewController {
         let alert = UIAlertController(title: "Удалить?", message: "Вы уверены, что хотите удалить изображение?", preferredStyle: .alert)
         let noAction = UIAlertAction(title: "Нет", style: .cancel, handler: nil)
         let yesAction = UIAlertAction(title: "Да", style: .destructive, handler: { [unowned self] (alert) in
+            //deleting photo
             self.context.delete(self.photo)
             self.appDelegate.saveContext()
             
+            //prepareing PhotoGalleryView to dissmiss current view
             if let photoGaleryVC = self.navigationController?.viewControllers.first as? PhotoGalleryViewController {
                 guard let index = self.savedPhotos.firstIndex(of: self.photo) else { return }
                 print("index: \(index)")
                 photoGaleryVC.savedPhotos.remove(at: index)
                 photoGaleryVC.photosToShow = photoGaleryVC.savedPhotos
             }
-            
             self.navigationController?.popViewController(animated: true)
         })
         alert.addAction(noAction)
@@ -208,6 +212,7 @@ class PhotoDetailsViewController: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
     
+    //removes or restores all except image form view
     @objc func handleTap() {
         if navigationController!.isNavigationBarHidden {
             view.backgroundColor = .white
@@ -224,7 +229,7 @@ class PhotoDetailsViewController: UIViewController {
         }
     }
     
-    //helper to get bounds of photo
+    //helper to get bounds of photo inside imageView
     private func imageBounds(in imageView: UIImageView) -> CGRect {
         guard let image = imageView.image else { return CGRect(x: 0, y: 0, width: 0, height: 0) }
         let imageViewRatio = imageView.bounds.height / imageView.bounds.width
