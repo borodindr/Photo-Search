@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		322564FC22AE656600BF3D3E /* PhotoDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322564FB22AE656600BF3D3E /* PhotoDetailsView.swift */; };
 		3266BE0D22A85C600097254D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3266BE0C22A85C600097254D /* AppDelegate.swift */; };
 		3266BE0F22A85C600097254D /* PhotoGalleryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3266BE0E22A85C600097254D /* PhotoGalleryViewController.swift */; };
 		3266BE1222A85C600097254D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3266BE1022A85C600097254D /* Main.storyboard */; };
@@ -22,6 +23,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		322564FB22AE656600BF3D3E /* PhotoDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailsView.swift; sourceTree = "<group>"; };
 		3266BE0922A85C600097254D /* Photo Search.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Photo Search.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3266BE0C22A85C600097254D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3266BE0E22A85C600097254D /* PhotoGalleryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoGalleryViewController.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				3266BE3922A96FFA0097254D /* PhotoCell.swift */,
+				322564FB22AE656600BF3D3E /* PhotoDetailsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -188,6 +191,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				322564FC22AE656600BF3D3E /* PhotoDetailsView.swift in Sources */,
 				3266BE3422A96BFC0097254D /* Photo+CoreDataProperties.swift in Sources */,
 				3266BE3A22A96FFA0097254D /* PhotoCell.swift in Sources */,
 				3266BE3322A96BFC0097254D /* Photo+CoreDataClass.swift in Sources */,
