@@ -70,7 +70,7 @@ public class Photo: NSManagedObject {
             return
         }
         
-        URLSession.shared.dataTask(with: url) { (data, response, error) in
+        URLSession.shared.dataTask(with: url) { [unowned self] (data, response, error) in
             if let error = error as NSError? {
                 completion(nil, error)
                 return

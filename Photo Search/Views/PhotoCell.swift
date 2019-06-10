@@ -16,6 +16,7 @@ class PhotoCell: UICollectionViewCell {
         imageView.widthAnchor.constraint(equalTo: imageView.heightAnchor).isActive = true
         imageView.clipsToBounds = true
         imageView.contentMode = .scaleAspectFill
+        imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
         return imageView
     }()
     
@@ -49,5 +50,8 @@ class PhotoCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
+    }
 }

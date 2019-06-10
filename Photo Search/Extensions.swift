@@ -32,16 +32,21 @@ extension UIViewController {
     
     func handleError(_ error: NSError) {
         let errorCode = error.code
-        switch errorCode {
-        case -1009:
-            //No internet connection
-            showAlertWith(title: "Нет интернет соединения", message: "Проверьте соединение с интернетом")
-        case -1001:
-            //Request time out
-            showAlertWith(title: "Плохое соединене", message: "Проверьте соединение с интернетом или попробуйте позже")
-        default:
-            //Other errors
-            showAlertWith(title: "Неизвестная ошибка", message: "Попробуйте позже")
+        DispatchQueue.main.async { [unowned self] in
+            switch errorCode {
+            case -1009:
+                //No internet connection
+                self.showAlertWith(title: "Нет интернета", message: "Проверьте соединение с интернетом")
+            case -1001:
+                //Request time out
+                self.showAlertWith(title: "Плохое соединене", message: "Проверьте соединение с интернетом или попробуйте позже")
+            case -999:
+                //Canceled task
+                return
+            default:
+                //Other errors
+                self.showAlertWith(title: "Неизвестная ошибка", message: "Попробуйте позже")
+            }
         }
     }
     

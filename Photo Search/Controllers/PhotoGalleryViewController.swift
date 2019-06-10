@@ -14,8 +14,8 @@ private let reuseIdentifier = "Cell"
 class PhotoGalleryViewController: UICollectionViewController {
 
     //MARK: properties
-    private var service: UnsplashService!
-    private var photosToShow = [Photo]()
+    private let service = UnsplashService()
+    var photosToShow = [Photo]()
     var savedPhotos = [Photo]()
     private var searchedPhotos = [Photo]()
     private var searchController: UISearchController!
@@ -34,6 +34,12 @@ class PhotoGalleryViewController: UICollectionViewController {
         setSearchController()
         loadSavedPhotos()
         showKeyboardIfNoPhotos()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        print("Saved Photos: \(savedPhotos.count)")
+        collectionView.reloadData()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -56,35 +62,8 @@ class PhotoGalleryViewController: UICollectionViewController {
     
     private func showKeyboardIfNoPhotos() {
         if savedPhotos.isEmpty {
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [unowned self] in
                 self.searchController.searchBar.becomeFirstResponder()
-            }
-            
-        }
-    }
-    
-    private func searchPhotos(_ query: String, completion: @escaping () -> Void) {
-        service = UnsplashService()
-        self.searchedPhotos = []
-        service.searchPhotos(query) { (response, error) in
-            if let error = error as NSError? {
-                self.handleError(error)
-                DispatchQueue.main.async {
-                    completion()
-                }
-                return
-            }
-            
-            if let response = response {
-                for photoData in response.results {
-                    let photo = Photo(context: self.childContext)
-                    photo.setFrom(photoData: photoData)
-                    self.searchedPhotos.append(photo)
-                }
-            }
-            self.photosToShow = self.searchedPhotos
-            DispatchQueue.main.async {
-                completion()
             }
         }
     }
@@ -109,22 +88,26 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
     }
     
     private func configurePhotoCell(_ cell: PhotoCell, with photo: Photo) {
-        cell.imageView.image = photo.smallPhoto
         if photo.managedObjectContext == childContext {
+            //photo object from search
             photo.loadImage(size: .small) { (image, error) in
-                if let error = error {
-                    self.handleError(error)
+                if error != nil {
+                    cell.imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
                 }
-                cell.imageView.image = image
+                
+                if let image = image {
+                    cell.imageView.image = image
+                }
             }
         } else {
+            //saved photo
             cell.imageView.image = photo.smallPhoto
         }
         cell.titleLabel.text = "By \(photo.userName)"
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = UIDevice.current.orientation.isPortrait ? view.frame.width / 3 - 1 : view.frame.width / 6 - 1
+        let width = UIDevice.current.orientation.isLandscape ? view.frame.width / 6 - 1 : view.frame.width / 3 - 1
         let height = width + 50
         return CGSize(width: width, height: height)
     }
@@ -141,6 +124,7 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
         let vc = PhotoDetailsViewController()
         let photo = photosToShow[indexPath.item]
         vc.photo = photo
+        vc.savedPhotos = savedPhotos
         self.navigationController?.show(vc, sender: nil)
     }
 
@@ -156,7 +140,6 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
         definesPresentationContext = true
         navigationItem.hidesSearchBarWhenScrolling = false
         searchController.obscuresBackgroundDuringPresentation = false
-        searchController.hidesNavigationBarDuringPresentation = true
         searchController.delegate = self
         searchController.searchBar.delegate = self
         searchController.searchBar.placeholder = "Поиск фото"
@@ -164,18 +147,51 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         photosToShow = []
+        searchedPhotos = []
         collectionView.reloadData()
         addLoadingView(to: view)
         guard let query = searchBar.text else { return }
-        searchPhotos(query) {
-            self.collectionView.reloadData()
-            self.removeLoadingView()
+//        searchBar.showsCancelButton = false
+        
+        service.searchPhotos(query) { [ unowned self ] (response, error) in
+            if let error = error {
+                self.handleError(error)
+            }
+            
+            if let response = response {
+                for photoData in response.results {
+                    let photo = Photo(context: self.childContext)
+                    photo.setFrom(photoData: photoData)
+                    self.searchedPhotos.append(photo)
+                }
+                
+                if self.searchedPhotos.isEmpty {
+                    DispatchQueue.main.async {
+                        self.showAlertWith(title: "Ничего не найдено", message: "Попробуйте сделать другой запрос")
+                    }
+                }
+            }
+            
+            if self.searchedPhotos.isEmpty {
+                self.photosToShow = self.savedPhotos
+                self.searchController.dismiss(animated: true, completion: nil)
+            } else {
+                self.photosToShow = self.searchedPhotos
+            }
+            
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+                self.removeLoadingView()
+//                searchBar.showsCancelButton = true
+            }
         }
     }
     
-    func willDismissSearchController(_ searchController: UISearchController) {
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        UnsplashService.task.cancel()
         loadSavedPhotos()
         collectionView.reloadData()
     }
 }
+
 
