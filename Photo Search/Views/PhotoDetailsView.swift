@@ -77,13 +77,11 @@ class PhotoDetailsView: UIView {
         let gradientLayerBounds = imageBounds(in: imageView)
         gradientLayer.frame = gradientLayerBounds
         
-        print(gradientLayerBounds)
         //Add layer only if it is not exists yet
         if let imageViewLayers = imageView.layer.sublayers,
            imageViewLayers.contains(gradientLayer) {
             return
         } else {
-            print("added gradient")
             imageView.layer.addSublayer(gradientLayer)
         }
     }
