@@ -46,6 +46,7 @@ public class Photo: NSManagedObject {
         self.userName = photoData.user.name
     }
     
+    //Dublicates Photo object from different context
     func setFrom(photoEntity: Photo) {
         self.title = photoEntity.title
         self.subtitle = photoEntity.subtitle
@@ -55,8 +56,7 @@ public class Photo: NSManagedObject {
         self.dateAdded = Date()
     }
     
-    
-    
+    //loads small of large image from saved url
     func loadImage(size imageSize: ImageSize, completion: @escaping (UIImage?, NSError?) -> Void) {
         var urlString: String
         switch imageSize {
@@ -77,13 +77,13 @@ public class Photo: NSManagedObject {
             }
             if let data = data {
                 if let newImage = UIImage(data: data) {
+                    switch imageSize {
+                    case .full:
+                        self.fullPhotoData = data as NSData
+                    case .small:
+                        self.smallPhotoData = data as NSData
+                    }
                     DispatchQueue.main.async {
-                        switch imageSize {
-                        case .full:
-                            self.fullPhotoData = data as NSData
-                        case .small:
-                            self.smallPhotoData = data as NSData
-                        }
                         completion(newImage, nil)
                     }
                 }

@@ -9,8 +9,8 @@
 import Foundation
 
 struct UnsplashService {
-    let urlString = "https://api.unsplash.com/search/photos?per_page=50&query="
-    let accessKey = "Client-ID 6d0d24c4eca664945e8752131bc607b15148688e1b50eb03ea9b2b6c634093c4"
+    private let urlString = "https://api.unsplash.com/search/photos?per_page=50&query="
+    private let accessKey = "Client-ID 6d0d24c4eca664945e8752131bc607b15148688e1b50eb03ea9b2b6c634093c4"
     static var task = URLSessionDataTask()
     
     func searchPhotos(_ query: String, completion: @escaping (UnsplashResponse?, NSError?) -> Void) {

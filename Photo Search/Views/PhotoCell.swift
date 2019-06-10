@@ -10,6 +10,16 @@ import UIKit
 
 class PhotoCell: UICollectionViewCell {
     
+    static var footerHeight: CGFloat {
+        get {
+            let cell = PhotoCell()
+            return cell.space + cell.labelHeight
+        }
+    }
+    
+    private let labelHeight: CGFloat = 46
+    private let space: CGFloat = 4
+    
     let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -40,10 +50,10 @@ class PhotoCell: UICollectionViewCell {
         imageView.rightAnchor.constraint(equalTo: rightAnchor).isActive = true
         imageView.leftAnchor.constraint(equalTo: leftAnchor).isActive = true
         
-        titleLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -4).isActive = true
-        titleLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 4).isActive = true
-        titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 4).isActive = true
-        titleLabel.heightAnchor.constraint(equalToConstant: 46).isActive = true
+        titleLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -space).isActive = true
+        titleLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: space).isActive = true
+        titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: space).isActive = true
+        titleLabel.heightAnchor.constraint(equalToConstant: labelHeight).isActive = true
     }
     
     required init?(coder aDecoder: NSCoder) {

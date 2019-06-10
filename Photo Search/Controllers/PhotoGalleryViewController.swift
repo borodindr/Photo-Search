@@ -20,6 +20,8 @@ class PhotoGalleryViewController: UICollectionViewController {
     private var searchedPhotos = [Photo]()
     private var searchController: UISearchController!
     private let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    //child context to create searched objects. Only selected (saved) objects go to parent context
     private lazy var childContext:  NSManagedObjectContext = {
         let childContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         childContext.parent = self.context
@@ -33,12 +35,11 @@ class PhotoGalleryViewController: UICollectionViewController {
         navigationItem.title = "Поиск Фото"
         setSearchController()
         loadSavedPhotos()
-        showKeyboardIfNoPhotos()
+        showKeyboardIfNoPhotos() //For better UX. If there are no saved photos yet, show keyboard to search
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("Saved Photos: \(savedPhotos.count)")
         collectionView.reloadData()
     }
     
@@ -67,6 +68,27 @@ class PhotoGalleryViewController: UICollectionViewController {
             }
         }
     }
+    
+    private func configurePhotoCell(_ cell: PhotoCell, with photo: Photo) {
+        //setting image of cell
+        if photo.managedObjectContext == childContext {
+            //photo object from search
+            photo.loadImage(size: .small) { (image, error) in
+                if error != nil {
+                    cell.imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
+                }
+                
+                if let image = image {
+                    cell.imageView.image = image
+                }
+            }
+        } else {
+            //saved photo
+            cell.imageView.image = photo.smallPhoto
+        }
+        //setting title of cell
+        cell.titleLabel.text = "By \(photo.userName)"
+    }
 }
 
 
@@ -87,28 +109,9 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
         return cell
     }
     
-    private func configurePhotoCell(_ cell: PhotoCell, with photo: Photo) {
-        if photo.managedObjectContext == childContext {
-            //photo object from search
-            photo.loadImage(size: .small) { (image, error) in
-                if error != nil {
-                    cell.imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
-                }
-                
-                if let image = image {
-                    cell.imageView.image = image
-                }
-            }
-        } else {
-            //saved photo
-            cell.imageView.image = photo.smallPhoto
-        }
-        cell.titleLabel.text = "By \(photo.userName)"
-    }
-    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = UIDevice.current.orientation.isLandscape ? view.frame.width / 6 - 1 : view.frame.width / 3 - 1
-        let height = width + 50
+        let width = UIDevice.current.orientation.isLandscape ? view.frame.width / 6 - 1 : view.frame.width / 3 - 1 //to make nearly same cells for bothe orientations; 1 = line space between items
+        let height = width + PhotoCell.footerHeight
         return CGSize(width: width, height: height)
     }
     
@@ -123,8 +126,8 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
     override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let vc = PhotoDetailsViewController()
         let photo = photosToShow[indexPath.item]
-        vc.photo = photo
-        vc.savedPhotos = savedPhotos
+        vc.photo = photo //photo, which will be shown
+        vc.savedPhotos = savedPhotos //to check if photo already saved
         self.navigationController?.show(vc, sender: nil)
     }
 
@@ -176,13 +179,13 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
                 self.photosToShow = self.savedPhotos
                 self.searchController.dismiss(animated: true, completion: nil)
             } else {
+                
                 self.photosToShow = self.searchedPhotos
             }
             
             DispatchQueue.main.async {
                 self.collectionView.reloadData()
                 self.removeLoadingView()
-//                searchBar.showsCancelButton = true
             }
         }
     }
