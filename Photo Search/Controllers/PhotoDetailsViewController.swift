@@ -21,7 +21,11 @@ class PhotoDetailsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        if #available(iOS 13.0, *) {
+            view.backgroundColor = .systemBackground
+        } else {
+            view.backgroundColor = .white
+        }
         addTapGesture()
         navigationItem.largeTitleDisplayMode = .never
         if photo.managedObjectContext == context {
@@ -68,10 +72,10 @@ class PhotoDetailsViewController: UIViewController {
         navigationItem.rightBarButtonItem = button
     }
     
-    //Checks if opened photo already saved to avoid dublication
+    //Checks if opened photo already saved to avoid duplication
     private func isPhotoAlreadySaved() -> Bool {
-        guard let photoGaleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController else { return false }
-        let savedPhotos = photoGaleryVC.savedPhotos
+        guard let photoGalleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController else { return false }
+        let savedPhotos = photoGalleryVC.savedPhotos
         for savedPhoto in savedPhotos {
             if savedPhoto.fullPhotoData == photo.fullPhotoData {
                 return true
@@ -86,8 +90,8 @@ class PhotoDetailsViewController: UIViewController {
         photoToSave.setFrom(photoEntity: photo)
         appDelegate.saveContext()
         
-        if let photoGaleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController {
-            photoGaleryVC.savedPhotos.append(photoToSave)
+        if let photoGalleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController {
+            photoGalleryVC.savedPhotos.append(photoToSave)
         }
         
         let alert = UIAlertController(title: "Saved".localized(), message: "Photo saved".localized(), preferredStyle: .alert)
@@ -105,7 +109,7 @@ class PhotoDetailsViewController: UIViewController {
             self.context.delete(self.photo)
             self.appDelegate.saveContext()
             
-            //prepareing PhotoGalleryView to dissmiss current view
+            //preparing PhotoGalleryView to dismiss current view
             if let photoGaleryVC = self.navigationController?.viewControllers.first as? PhotoGalleryViewController {
                 guard let index = self.savedPhotos.firstIndex(of: self.photo) else { return }
                 print("index: \(index)")
@@ -122,7 +126,11 @@ class PhotoDetailsViewController: UIViewController {
     //removes or restores all except image form view
     @objc func handleTap() {
         if navigationController!.isNavigationBarHidden {
-            view.backgroundColor = .white
+            if #available(iOS 13.0, *) {
+                view.backgroundColor = .systemBackground
+            } else {
+                view.backgroundColor = .white
+            }
             photoDetailsView.hideViews(false)
             PhotoDetailsViewController.loadingIndicator.style = .gray
             navigationController?.setNavigationBarHidden(false, animated: true)
