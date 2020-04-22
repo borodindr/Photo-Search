@@ -2,6 +2,8 @@
 
 Simple app which allows you to search photos on Unsplash and save them in the app
 
+## Preview
+
 ![Preview](PhotoSearch-app_preview.gif)
 
 ## Features
