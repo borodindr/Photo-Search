@@ -36,16 +36,16 @@ extension UIViewController {
             switch errorCode {
             case -1009:
                 //No internet connection
-                self.showAlertWith(title: "Нет интернета", message: "Проверьте соединение с интернетом")
+                self.showAlertWith(title: "No internet connection".localized(), message: "Please check internet connection or try later".localized())
             case -1001:
                 //Request time out
-                self.showAlertWith(title: "Плохое соединене", message: "Проверьте соединение с интернетом или попробуйте позже")
+                self.showAlertWith(title: "Bad connection".localized(), message: "Please check internet connection or try later".localized())
             case -999:
                 //Canceled task
                 return
             default:
                 //Other errors
-                self.showAlertWith(title: "Неизвестная ошибка", message: "Попробуйте позже")
+                self.showAlertWith(title: "Unknown error".localized(), message: "Please try again later".localized())
             }
         }
     }

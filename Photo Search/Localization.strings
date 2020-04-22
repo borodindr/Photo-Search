@@ -1,0 +1,45 @@
+/* 
+  Localization.strings
+  Photo Search
+
+  Created by Dmitry Borodin on 22.04.2020.
+  Copyright © 2020 Dmitry Borodin. All rights reserved.
+*/
+
+"Author: %@" = "Автор: %@";
+
+"Saved: %@" = "Сохранено: %@";
+
+"Photo Search" = "Поиск Фото";
+
+"Search" = "Поиск";
+
+"No photos found" = "Ничего не найдено";
+
+"Try to search something else" = "Попробуйте сделать другой запрос";
+
+"Save" = "Сохранить";
+
+"Delete" = "Удалить";
+
+"Saved" = "Сохранено";
+
+"Photo saved" = "Фото сохранено";
+
+"Delete?" = "Удалить?";
+
+"Are you sure you want to delete the photo?" = "Вы уверены, что хотите удалить изображение?";
+
+"Yes" = "Да";
+
+"No" = "Нет";
+
+"No internet connection" = "Нет интернета";
+
+"Please check internet connection or try later" = "Проверьте соединение с интернетом или попробуйте позже";
+
+"Bad connection" = "Плохое соединение";
+
+"Unknown error" = "Неизвестная ошибка";
+
+"Please try again later" = "Попробуйте позже";

@@ -19,7 +19,7 @@ public class Photo: NSManagedObject {
             let data = smallPhotoData as Data
             return UIImage(data: data)
         } set {
-            guard let imageData = smallPhoto?.pngData() as NSData? else { return }
+            guard let imageData = newValue?.pngData() as NSData? else { return }
             smallPhotoData = imageData
         }
     }
@@ -29,7 +29,7 @@ public class Photo: NSManagedObject {
             let data = fullPhotoData as Data
             return UIImage(data: data)
         } set {
-            guard let imageData = fullPhoto?.pngData() as NSData? else { return }
+            guard let imageData = newValue?.pngData() as NSData? else { return }
             fullPhotoData = imageData
         }
     }

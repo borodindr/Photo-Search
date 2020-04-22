@@ -120,15 +120,17 @@ class PhotoDetailsView: UIView {
     
     func setMetaLabelTextFrom(_ photo: Photo) {
         let userName = photo.userName
-        metaLabel.text = "Автор: \(userName)"
+        metaLabel.text = "Author: %@".localized(with: [userName])
         
         //called only with saved photos, which have dateAdded
         if let dateAdded = photo.dateAdded {
             let dateFormater = DateFormatter()
-            dateFormater.locale = Locale(identifier: "ru_RU")
-            dateFormater.dateFormat = "d MMMM yyyy г. в HH:mm"
+            dateFormater.locale = Locale.current
+            dateFormater.dateStyle = .long
+            dateFormater.timeStyle = .short
             let dateString = dateFormater.string(from: dateAdded)
-            metaLabel.text?.append(contentsOf: "\nСохранено: \(dateString)")
+            let savedText = "Saved: %@".localized(with: [dateString])
+            metaLabel.text?.append("\n\(savedText)")
         }
     }
     

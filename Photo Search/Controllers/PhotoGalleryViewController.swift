@@ -13,7 +13,7 @@ private let reuseIdentifier = "Cell"
 
 class PhotoGalleryViewController: UICollectionViewController {
 
-    //MARK: properties
+    //MARK: - Properties
     private let service = UnsplashService()
     var photosToShow = [Photo]()
     var savedPhotos = [Photo]()
@@ -28,11 +28,11 @@ class PhotoGalleryViewController: UICollectionViewController {
         return childContext
     }()
     
-    //MARK: methods
+    //MARK: - Methods
     override func viewDidLoad() {
         super.viewDidLoad()
         self.collectionView!.register(PhotoCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-        navigationItem.title = "Поиск Фото"
+        title = "Photo Search".localized()
         setSearchController()
         loadSavedPhotos()
         showKeyboardIfNoPhotos() //For better UX. If there are no saved photos yet, show keyboard to search
@@ -110,7 +110,7 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = UIDevice.current.orientation.isLandscape ? view.frame.width / 6 - 1 : view.frame.width / 3 - 1 //to make nearly same cells for bothe orientations; 1 = line space between items
+        let width = UIDevice.current.orientation.isLandscape ? view.frame.width / 6 - 1 : view.frame.width / 3 - 1 //to make nearly same cells for both orientations; 1 = line space between items
         let height = width + PhotoCell.footerHeight
         return CGSize(width: width, height: height)
     }
@@ -128,7 +128,7 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
         let photo = photosToShow[indexPath.item]
         vc.photo = photo //photo, which will be shown
         vc.savedPhotos = savedPhotos //to check if photo already saved
-        self.navigationController?.show(vc, sender: nil)
+        self.navigationController?.pushViewController(vc, animated: true)
     }
 
 }
@@ -145,7 +145,7 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.delegate = self
         searchController.searchBar.delegate = self
-        searchController.searchBar.placeholder = "Поиск фото"
+        searchController.searchBar.placeholder = "Search".localized()
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -169,14 +169,16 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
                 
                 if self.searchedPhotos.isEmpty {
                     DispatchQueue.main.async {
-                        self.showAlertWith(title: "Ничего не найдено", message: "Попробуйте сделать другой запрос")
+                        self.showAlertWith(title: "No photos found".localized(), message: "Try to search something else".localized())
                     }
                 }
             }
             
             if self.searchedPhotos.isEmpty {
                 self.photosToShow = self.savedPhotos
-                self.searchController.dismiss(animated: true, completion: nil)
+                DispatchQueue.main.async {
+                    self.searchController.dismiss(animated: true, completion: nil)
+                }
             } else {
                 
                 self.photosToShow = self.searchedPhotos

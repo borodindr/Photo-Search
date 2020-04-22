@@ -26,13 +26,13 @@ class PhotoDetailsViewController: UIViewController {
         navigationItem.largeTitleDisplayMode = .never
         if photo.managedObjectContext == context {
             //Preparation for saved photos
-            addRightBarButtonWith(title: "Удалить", action: #selector(deletePhoto))
+            addRightBarButtonWith(title: "Delete".localized(), action: #selector(deletePhoto))
             
             photoDetailsView.imageView.image = photo.fullPhoto
             photoDetailsView.setMetaLabelTextFrom(photo)
         } else {
             //Preparation for NOT saved photos
-            addRightBarButtonWith(title: "Сохранить", action: #selector(savePhoto))
+            addRightBarButtonWith(title: "Save".localized(), action: #selector(savePhoto))
             navigationItem.rightBarButtonItem?.isEnabled = false
             addLoadingView(to: photoDetailsView.imageView)
             photo.loadImage(size: .full) { (image, error) in
@@ -90,7 +90,7 @@ class PhotoDetailsViewController: UIViewController {
             photoGaleryVC.savedPhotos.append(photoToSave)
         }
         
-        let alert = UIAlertController(title: "Сохранено", message: "Фото сохранено", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Saved".localized(), message: "Photo saved".localized(), preferredStyle: .alert)
         let action = UIAlertAction(title: "OK", style: .cancel)
         alert.addAction(action)
         self.present(alert, animated: true, completion: nil)
@@ -98,9 +98,9 @@ class PhotoDetailsViewController: UIViewController {
     }
     
     @objc func deletePhoto() {
-        let alert = UIAlertController(title: "Удалить?", message: "Вы уверены, что хотите удалить изображение?", preferredStyle: .alert)
-        let noAction = UIAlertAction(title: "Нет", style: .cancel, handler: nil)
-        let yesAction = UIAlertAction(title: "Да", style: .destructive, handler: { [unowned self] (alert) in
+        let alert = UIAlertController(title: "Delete?".localized(), message: "Are you sure you want to delete the photo?".localized(), preferredStyle: .alert)
+        let noAction = UIAlertAction(title: "No".localized(), style: .cancel, handler: nil)
+        let yesAction = UIAlertAction(title: "Yes".localized(), style: .destructive, handler: { [unowned self] (alert) in
             //deleting photo
             self.context.delete(self.photo)
             self.appDelegate.saveContext()
