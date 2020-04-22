@@ -7,12 +7,13 @@
 //
 
 import UIKit
+import CoreData
 
 class PhotoDetailsViewController: UIViewController {
 
     //MARK: Properties
     var photo: Photo!
-    var savedPhotos = [Photo]()
+//    var savedPhotos = [Photo]()
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     private var photoDetailsView: PhotoDetailsView {
@@ -28,29 +29,12 @@ class PhotoDetailsViewController: UIViewController {
         }
         addTapGesture()
         navigationItem.largeTitleDisplayMode = .never
-        if photo.managedObjectContext == context {
-            //Preparation for saved photos
-            addRightBarButtonWith(title: "Delete".localized(), action: #selector(deletePhoto))
-            
-            photoDetailsView.imageView.image = photo.fullPhoto
-            photoDetailsView.setMetaLabelTextFrom(photo)
-        } else {
-            //Preparation for NOT saved photos
-            addRightBarButtonWith(title: "Save".localized(), action: #selector(savePhoto))
-            navigationItem.rightBarButtonItem?.isEnabled = false
-            addLoadingView(to: photoDetailsView.imageView)
-            photo.loadImage(size: .full) { (image, error) in
-                if let error = error {
-                    self.handleError(error)
-                }
-                if let image = image {
-                    self.photoDetailsView.imageView.image = image
-                    self.photoDetailsView.setMetaLabelTextFrom(self.photo)
-                    self.navigationItem.rightBarButtonItem?.isEnabled = !self.isPhotoAlreadySaved()
-                }
-                self.removeLoadingView()
-            }
-        }
+        setRightBarButton()
+        setPhoto()
+    }
+    
+    deinit {
+        print("VC deinit")
     }
     
     override func loadView() {
@@ -74,14 +58,50 @@ class PhotoDetailsViewController: UIViewController {
     
     //Checks if opened photo already saved to avoid duplication
     private func isPhotoAlreadySaved() -> Bool {
-        guard let photoGalleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController else { return false }
-        let savedPhotos = photoGalleryVC.savedPhotos
-        for savedPhoto in savedPhotos {
-            if savedPhoto.fullPhotoData == photo.fullPhotoData {
-                return true
+        let fetchRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
+        let predicate = NSPredicate(format: "%K = %@", argumentArray: [#keyPath(Photo.id), photo.id as Any])
+        fetchRequest.predicate = predicate
+        
+        guard let photosCount = try? context.count(for: fetchRequest) else { return false }
+        print("Count:", photosCount)
+        return photosCount > 0
+    }
+    
+    private func setRightBarButton() {
+        if photo.managedObjectContext == context {
+            // Delete button if photo was saved
+            addRightBarButtonWith(title: "Delete".localized(), action: #selector(deletePhoto))
+        } else {
+            // Save button if new photo
+            addRightBarButtonWith(title: "Save".localized(), action: #selector(savePhoto))
+        }
+    }
+    
+    private func setPhoto() {
+        if let savedPhoto = photo.fullPhoto {
+            //Preparation for saved photos
+            photoDetailsView.imageView.image = savedPhoto
+            photoDetailsView.setMetaLabelTextFrom(photo)
+            
+            if !(photo.managedObjectContext == context) {
+                self.navigationItem.rightBarButtonItem?.isEnabled = !self.isPhotoAlreadySaved()
+            }
+        } else {
+            //Preparation for NOT saved photos
+            addLoadingView(to: photoDetailsView.imageView)
+            navigationItem.rightBarButtonItem?.isEnabled = false
+            photo.loadImage(size: .full) { (image, error) in
+                if let error = error {
+                    self.handleError(error)
+                }
+                if let image = image {
+                    self.photoDetailsView.imageView.image = image
+                    self.photoDetailsView.setMetaLabelTextFrom(self.photo)
+                    self.navigationItem.rightBarButtonItem?.isEnabled = !self.isPhotoAlreadySaved()
+                }
+                self.removeLoadingView()
             }
         }
-        return false
     }
     
     //actions
@@ -89,10 +109,6 @@ class PhotoDetailsViewController: UIViewController {
         let photoToSave = Photo(context: context)
         photoToSave.setFrom(photoEntity: photo)
         appDelegate.saveContext()
-        
-        if let photoGalleryVC = navigationController?.viewControllers.first as? PhotoGalleryViewController {
-            photoGalleryVC.savedPhotos.append(photoToSave)
-        }
         
         let alert = UIAlertController(title: "Saved".localized(), message: "Photo saved".localized(), preferredStyle: .alert)
         let action = UIAlertAction(title: "OK", style: .cancel)
@@ -109,13 +125,6 @@ class PhotoDetailsViewController: UIViewController {
             self.context.delete(self.photo)
             self.appDelegate.saveContext()
             
-            //preparing PhotoGalleryView to dismiss current view
-            if let photoGaleryVC = self.navigationController?.viewControllers.first as? PhotoGalleryViewController {
-                guard let index = self.savedPhotos.firstIndex(of: self.photo) else { return }
-                print("index: \(index)")
-                photoGaleryVC.savedPhotos.remove(at: index)
-                photoGaleryVC.photosToShow = photoGaleryVC.savedPhotos
-            }
             self.navigationController?.popViewController(animated: true)
         })
         alert.addAction(noAction)

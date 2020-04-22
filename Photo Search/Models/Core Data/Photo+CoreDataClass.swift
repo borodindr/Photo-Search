@@ -39,6 +39,7 @@ public class Photo: NSManagedObject {
     var fullPhotoURLString: String?
     
     func setFrom(photoData: PhotoData) {
+        self.id = photoData.id
         self.title = photoData.description
         self.subtitle = photoData.alt_description
         self.smallPhotoURLString = photoData.urls.small
@@ -46,8 +47,9 @@ public class Photo: NSManagedObject {
         self.userName = photoData.user.name
     }
     
-    //Dublicates Photo object from different context
+    //Duplicates Photo object from different context
     func setFrom(photoEntity: Photo) {
+        self.id = photoEntity.id
         self.title = photoEntity.title
         self.subtitle = photoEntity.subtitle
         self.smallPhotoData = photoEntity.smallPhotoData
@@ -70,9 +72,12 @@ public class Photo: NSManagedObject {
             return
         }
         
-        URLSession.shared.dataTask(with: url) { [unowned self] (data, response, error) in
+        URLSession.shared.dataTask(with: url) { [weak self] (data, response, error) in
+            guard let self = self else { return }
             if let error = error as NSError? {
-                completion(nil, error)
+                DispatchQueue.main.async {
+                    completion(nil, error)
+                }
                 return
             }
             if let data = data {

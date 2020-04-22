@@ -14,7 +14,8 @@ struct UnsplashService {
     static var task = URLSessionDataTask()
     
     func searchPhotos(_ query: String, completion: @escaping (UnsplashResponse?, NSError?) -> Void) {
-        
+        UnsplashService.task.suspend()
+        UnsplashService.task.cancel()
         guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
               let url = URL(string: urlString + encodedQuery) else {
             print("URL error")
@@ -49,6 +50,7 @@ struct UnsplashResponse: Decodable {
 }
 
 struct PhotoData: Decodable {
+    var id: String
     var description: String?
     var alt_description: String?
     var urls: PhotoUrl

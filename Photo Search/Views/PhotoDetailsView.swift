@@ -124,11 +124,11 @@ class PhotoDetailsView: UIView {
         
         //called only with saved photos, which have dateAdded
         if let dateAdded = photo.dateAdded {
-            let dateFormater = DateFormatter()
-            dateFormater.locale = Locale.current
-            dateFormater.dateStyle = .long
-            dateFormater.timeStyle = .short
-            let dateString = dateFormater.string(from: dateAdded)
+            let dateFormatter = DateFormatter()
+            dateFormatter.locale = Locale.current
+            dateFormatter.dateStyle = .long
+            dateFormatter.timeStyle = .short
+            let dateString = dateFormatter.string(from: dateAdded)
             let savedText = "Saved: %@".localized(with: [dateString])
             metaLabel.text?.append("\n\(savedText)")
         }

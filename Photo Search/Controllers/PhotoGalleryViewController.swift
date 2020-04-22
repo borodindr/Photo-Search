@@ -16,10 +16,11 @@ class PhotoGalleryViewController: UICollectionViewController {
     //MARK: - Properties
     private let service = UnsplashService()
     var photosToShow = [Photo]()
-    var savedPhotos = [Photo]()
-    private var searchedPhotos = [Photo]()
+//    var savedPhotos = [Photo]()
+//    private var searchedPhotos = [Photo]()
     private var searchController: UISearchController!
     private let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    private var searchDebounceTimer: Timer?
     
     //child context to create searched objects. Only selected (saved) objects go to parent context
     private lazy var childContext:  NSManagedObjectContext = {
@@ -34,13 +35,18 @@ class PhotoGalleryViewController: UICollectionViewController {
         self.collectionView!.register(PhotoCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         title = "Photo Search".localized()
         setSearchController()
-        loadSavedPhotos()
-        showKeyboardIfNoPhotos() //For better UX. If there are no saved photos yet, show keyboard to search
+//        loadSavedPhotos()
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        collectionView.reloadData()
+        let searchText = searchController.searchBar.text
+        if searchText == nil || searchText == "" {
+            loadSavedPhotos()
+        }
+        showKeyboardIfNoPhotos() //For better UX. If there are no saved photos yet, show keyboard to search
+//        collectionView.reloadData()
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -53,41 +59,45 @@ class PhotoGalleryViewController: UICollectionViewController {
             let fetchRequest: NSFetchRequest = Photo.fetchRequest()
             let sortDescriptor = NSSortDescriptor(key: "dateAdded", ascending: true)
             fetchRequest.sortDescriptors = [sortDescriptor]
-            savedPhotos = try context.fetch(fetchRequest)
-            photosToShow = savedPhotos
+            photosToShow = try context.fetch(fetchRequest)
             collectionView.reloadData()
+            clearChildContext()
         } catch {
-            print("fetch error")
+            print("fetch error:", error)
         }
     }
     
     private func showKeyboardIfNoPhotos() {
-        if savedPhotos.isEmpty {
-            DispatchQueue.main.async { [unowned self] in
-                self.searchController.searchBar.becomeFirstResponder()
+        if photosToShow.isEmpty {
+            DispatchQueue.main.async { [weak self] in
+                self?.searchController.searchBar.becomeFirstResponder()
             }
         }
     }
     
     private func configurePhotoCell(_ cell: PhotoCell, with photo: Photo) {
         //setting image of cell
-        if photo.managedObjectContext == childContext {
+        if let savedPhoto = photo.smallPhoto {
+            cell.imageView.image = savedPhoto
+        } else {
             //photo object from search
-            photo.loadImage(size: .small) { (image, error) in
+            cell.imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
+            photo.loadImage(size: .small) { [weak cell] (image, error) in
                 if error != nil {
-                    cell.imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
+                    cell?.imageView.image = #imageLiteral(resourceName: "PhotoPlaceholder")
                 }
                 
                 if let image = image {
-                    cell.imageView.image = image
+                    cell?.imageView.image = image
                 }
             }
-        } else {
-            //saved photo
-            cell.imageView.image = photo.smallPhoto
         }
         //setting title of cell
         cell.titleLabel.text = "By \(photo.userName)"
+    }
+    
+    private func clearChildContext() {
+        childContext.insertedObjects.forEach({ childContext.delete($0) })
     }
 }
 
@@ -127,10 +137,9 @@ extension PhotoGalleryViewController: UICollectionViewDelegateFlowLayout {
         let vc = PhotoDetailsViewController()
         let photo = photosToShow[indexPath.item]
         vc.photo = photo //photo, which will be shown
-        vc.savedPhotos = savedPhotos //to check if photo already saved
+//        vc.savedPhotos = photosToShow //to check if photo already saved
         self.navigationController?.pushViewController(vc, animated: true)
     }
-
 }
 
 
@@ -148,53 +157,55 @@ extension PhotoGalleryViewController: UISearchControllerDelegate, UISearchBarDel
         searchController.searchBar.placeholder = "Search".localized()
     }
     
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        photosToShow = []
-        searchedPhotos = []
-        collectionView.reloadData()
-        addLoadingView(to: view)
-        guard let query = searchBar.text else { return }
-        
-        service.searchPhotos(query) { [unowned self] (response, error) in
-            if let error = error {
-                self.handleError(error)
-            }
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        let searchText = searchController.searchBar.text
+        if searchText == nil || searchText == "" {
+            photosToShow = []
+            collectionView.reloadData()
+        }
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if let timer = searchDebounceTimer, timer.isValid {
+            print("Invalidating timer")
+            searchDebounceTimer?.invalidate()
+        }
+        searchDebounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { [weak self] (_) in
+            guard let self = self else { return }
             
-            if let response = response {
-                for photoData in response.results {
-                    let photo = Photo(context: self.childContext)
-                    photo.setFrom(photoData: photoData)
-                    self.searchedPhotos.append(photo)
+            self.clearChildContext()
+            
+            print("Searching:", searchText)
+            self.service.searchPhotos(searchText) { [weak self] (response, error) in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    self.handleError(error)
                 }
                 
-                if self.searchedPhotos.isEmpty {
-                    DispatchQueue.main.async {
-                        self.showAlertWith(title: "No photos found".localized(), message: "Try to search something else".localized())
+                if let response = response {
+                    self.photosToShow = response.results.map { [unowned self] photoData in
+                        let photo = Photo(context: self.childContext)
+                        photo.setFrom(photoData: photoData)
+                        return photo
                     }
+                    
+                    // TODO: show label "No photos found"
+                    
                 }
-            }
-            
-            if self.searchedPhotos.isEmpty {
-                self.photosToShow = self.savedPhotos
-                DispatchQueue.main.async {
-                    self.searchController.dismiss(animated: true, completion: nil)
-                }
-            } else {
                 
-                self.photosToShow = self.searchedPhotos
+                DispatchQueue.main.async {
+                    self.collectionView.reloadData()
+                    self.removeLoadingView()
+                }
             }
             
-            DispatchQueue.main.async {
-                self.collectionView.reloadData()
-                self.removeLoadingView()
-            }
         }
     }
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         UnsplashService.task.cancel()
         loadSavedPhotos()
-        collectionView.reloadData()
     }
 }
 
